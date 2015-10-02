@@ -393,6 +393,56 @@
                 "file": "images/digit_leco_0.png",
                 "name": "CLOCK_DIGIT_LECO_0",
                 "type": "png"
+            },
+            {
+                "file": "images/digit_leco_small_9.png",
+                "name": "CLOCK_DIGIT_LECO_SMALL_9",
+                "type": "png"
+            },
+            {
+                "file": "images/digit_leco_small_8.png",
+                "name": "CLOCK_DIGIT_LECO_SMALL_8",
+                "type": "png"
+            },
+            {
+                "file": "images/digit_leco_small_7.png",
+                "name": "CLOCK_DIGIT_LECO_SMALL_7",
+                "type": "png"
+            },
+            {
+                "file": "images/digit_leco_small_6.png",
+                "name": "CLOCK_DIGIT_LECO_SMALL_6",
+                "type": "png"
+            },
+            {
+                "file": "images/digit_leco_small_5.png",
+                "name": "CLOCK_DIGIT_LECO_SMALL_5",
+                "type": "png"
+            },
+            {
+                "file": "images/digit_leco_small_4.png",
+                "name": "CLOCK_DIGIT_LECO_SMALL_4",
+                "type": "png"
+            },
+            {
+                "file": "images/digit_leco_small_3.png",
+                "name": "CLOCK_DIGIT_LECO_SMALL_3",
+                "type": "png"
+            },
+            {
+                "file": "images/digit_leco_small_2.png",
+                "name": "CLOCK_DIGIT_LECO_SMALL_2",
+                "type": "png"
+            },
+            {
+                "file": "images/digit_leco_small_1.png",
+                "name": "CLOCK_DIGIT_LECO_SMALL_1",
+                "type": "png"
+            },
+            {
+                "file": "images/digit_leco_small_0.png",
+                "name": "CLOCK_DIGIT_LECO_SMALL_0",
+                "type": "png"
             }
         ]
     },

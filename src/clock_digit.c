@@ -4,7 +4,7 @@
 /*
  * Array mapping numbers to resource ids
  */
-uint32_t ClockDigit_imageIds[2][10] = {
+uint32_t ClockDigit_imageIds[3][10] = {
   {RESOURCE_ID_CLOCK_DIGIT_0,
     RESOURCE_ID_CLOCK_DIGIT_1,
     RESOURCE_ID_CLOCK_DIGIT_2,
@@ -24,7 +24,17 @@ uint32_t ClockDigit_imageIds[2][10] = {
    RESOURCE_ID_CLOCK_DIGIT_LECO_6,
    RESOURCE_ID_CLOCK_DIGIT_LECO_7,
    RESOURCE_ID_CLOCK_DIGIT_LECO_8,
-   RESOURCE_ID_CLOCK_DIGIT_LECO_9}
+   RESOURCE_ID_CLOCK_DIGIT_LECO_9},
+  {RESOURCE_ID_CLOCK_DIGIT_LECO_SMALL_0,
+   RESOURCE_ID_CLOCK_DIGIT_LECO_SMALL_1,
+   RESOURCE_ID_CLOCK_DIGIT_LECO_SMALL_2,
+   RESOURCE_ID_CLOCK_DIGIT_LECO_SMALL_3,
+   RESOURCE_ID_CLOCK_DIGIT_LECO_SMALL_4,
+   RESOURCE_ID_CLOCK_DIGIT_LECO_SMALL_5,
+   RESOURCE_ID_CLOCK_DIGIT_LECO_SMALL_6,
+   RESOURCE_ID_CLOCK_DIGIT_LECO_SMALL_7,
+   RESOURCE_ID_CLOCK_DIGIT_LECO_SMALL_8,
+   RESOURCE_ID_CLOCK_DIGIT_LECO_SMALL_9}
 };
 
 
@@ -133,3 +143,20 @@ void CDPrivate_adjustImagePalette(ClockDigit* this) {
     }
   #endif
 }
+
+// Added stuff for smaller digits
+
+void SmallClockDigit_construct(ClockDigit* this, GPoint pos) {
+  this->currentNum = -1;
+  this->bgColor = GColorWhite;
+  this->fgColor = GColorBlack;
+  this->position = pos;
+
+  this->imageLayer = bitmap_layer_create(GRect(pos.x, pos.y, 48, 46));
+
+  ClockDigit_setBlank(this);
+  ClockDigit_setNumber(this, 1, 2);
+  ClockDigit_setColor(this, GColorBlack, GColorWhite);
+}
+
+

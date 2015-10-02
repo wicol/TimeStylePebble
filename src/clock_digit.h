@@ -33,3 +33,7 @@ void ClockDigit_construct(ClockDigit* this, GPoint pos);
 void ClockDigit_destruct(ClockDigit* this);
 
 void CDPrivate_adjustImagePalette(ClockDigit* this);
+
+// for small numbers
+
+void SmallClockDigit_construct(ClockDigit* this, GPoint pos);

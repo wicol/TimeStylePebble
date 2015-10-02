@@ -39,10 +39,19 @@ static GFont batteryFont;
 // the four digits on the clock, ordered h1 h2, m1 m2
 static ClockDigit clockDigits[4];
 
+// the six digits on the clock when showing seconds, ordered h1 h2, m1 m2, s1 s2
+static ClockDigit smallClockDigits[6];
+
 // the date and weather strings
 static char currentDayName[8];
 static char currentDayNum[8];
 static char currentMonth[8];
+
+//static char currentSeconds[2];
+//static TextLayer *secondsLayer;
+static int secondsCountdown;
+static void activate_seconds();
+static void deactivate_seconds();
 
 void update_clock() {
   time_t rawTime;
@@ -65,17 +74,27 @@ void update_clock() {
     }
   }
 
-  // use the blank image for the leading hour digit if needed
-  if(globalSettings.showLeadingZero || hour / 10 != 0) {
-    ClockDigit_setNumber(&clockDigits[0], hour / 10, globalSettings.clockFontId);
+  if (secondsCountdown > 0) {
+    // update the small numbers
+    ClockDigit_setNumber(&smallClockDigits[0], hour / 10, 2);
+    ClockDigit_setNumber(&smallClockDigits[1], hour % 10, 2);
+    ClockDigit_setNumber(&smallClockDigits[2], timeInfo->tm_min  / 10, 2);
+    ClockDigit_setNumber(&smallClockDigits[3], timeInfo->tm_min  % 10, 2);
+    ClockDigit_setNumber(&smallClockDigits[4], timeInfo->tm_sec  / 10, 2);
+    ClockDigit_setNumber(&smallClockDigits[5], timeInfo->tm_sec  % 10, 2);
   } else {
-    ClockDigit_setBlank(&clockDigits[0]);
+    // use the blank image for the leading hour digit if needed
+    if(globalSettings.showLeadingZero || hour / 10 != 0) {
+      ClockDigit_setNumber(&clockDigits[0], hour / 10, globalSettings.clockFontId);
+    } else {
+      ClockDigit_setBlank(&clockDigits[0]);
+    }
+
+    ClockDigit_setNumber(&clockDigits[1], hour % 10, globalSettings.clockFontId);
+    ClockDigit_setNumber(&clockDigits[2], timeInfo->tm_min  / 10, globalSettings.clockFontId);
+    ClockDigit_setNumber(&clockDigits[3], timeInfo->tm_min  % 10, globalSettings.clockFontId);
   }
-
-  ClockDigit_setNumber(&clockDigits[1], hour % 10, globalSettings.clockFontId);
-  ClockDigit_setNumber(&clockDigits[2], timeInfo->tm_min  / 10, globalSettings.clockFontId);
-  ClockDigit_setNumber(&clockDigits[3], timeInfo->tm_min  % 10, globalSettings.clockFontId);
-
+  
   // set all the date strings
   strftime(currentDayNum,  3, "%e", timeInfo);
 
@@ -88,7 +107,7 @@ void update_clock() {
     currentDayNum[0] = currentDayNum[1];
     currentDayNum[1] = '\0';
   }
-
+  
   layer_mark_dirty(sidebarLayer);
 }
 
@@ -266,6 +285,8 @@ void sidebarLayerUpdateProc(Layer *l, GContext* ctx) {
     }
   }
 
+
+
   // in large font mode, draw a different date image
   if(!globalSettings.useLargeFonts) {
     if (dateImage) {
@@ -382,20 +403,35 @@ void forceScreenRedraw() {
   update_clock();
 }
 static void main_window_load(Window *window) {
-//   APP_LOG(APP_LOG_LEVEL_DEBUG, "trying to construct");
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "trying to construct 1");
+  SmallClockDigit_construct(&smallClockDigits[0], GPoint(7, 7));
+  SmallClockDigit_construct(&smallClockDigits[1], GPoint(60, 7));
+  SmallClockDigit_construct(&smallClockDigits[2], GPoint(7, 61));
+  SmallClockDigit_construct(&smallClockDigits[3], GPoint(60, 61));
+  SmallClockDigit_construct(&smallClockDigits[4], GPoint(7, 115));
+  SmallClockDigit_construct(&smallClockDigits[5], GPoint(60, 115));
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Made it past construction 1");
+  for(int i = 0; i < 6; i++) {
+    ClockDigit_setColor(&smallClockDigits[i], globalSettings.timeColor, globalSettings.timeBgColor);
+    layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(smallClockDigits[i].imageLayer));
+  }
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Made it past color setting");
+
+
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "trying to construct 2");
   ClockDigit_construct(&clockDigits[0], GPoint(7, 7));
   ClockDigit_construct(&clockDigits[1], GPoint(60, 7));
   ClockDigit_construct(&clockDigits[2], GPoint(7, 90));
   ClockDigit_construct(&clockDigits[3], GPoint(60, 90));
 
-//   APP_LOG(APP_LOG_LEVEL_DEBUG, "Made it past construction");
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Made it past construction 2");
 
   for(int i = 0; i < 4; i++) {
     ClockDigit_setColor(&clockDigits[i], globalSettings.timeColor, globalSettings.timeBgColor);
     layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(clockDigits[i].imageLayer));
   }
 
-//   APP_LOG(APP_LOG_LEVEL_DEBUG, "Made it past color setting");
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Made it past color setting 2");
 
   // load fonts
   smSidebarFont = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
@@ -430,14 +466,22 @@ static void main_window_load(Window *window) {
 
   window_set_background_color(window, globalSettings.timeBgColor);
 
+  secondsCountdown = 0;
+
+  // Hides the small numbers
+  deactivate_seconds();
+
   // Make sure the time is displayed from the start
   forceScreenRedraw();
-  update_clock();
+  // not needed? update_clock();
 }
 
 static void main_window_unload(Window *window) {
   for(int i = 0; i < 4; i++) {
     ClockDigit_destruct(&clockDigits[i]);
+  }
+  for(int i = 0; i < 6; i++) {
+    ClockDigit_destruct(&smallClockDigits[i]);
   }
 
   layer_destroy(sidebarLayer);
@@ -476,6 +520,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       vibes_short_pulse();
     }
   }
+  
+  // Handle temporary showing seconds
+  if (secondsCountdown > 0) {
+    secondsCountdown--;
+    if (secondsCountdown == 0) {
+      deactivate_seconds();
+    }
+  }
 
   update_clock();
 }
@@ -506,6 +558,35 @@ void batteryStateChanged(BatteryChargeState charge_state) {
   redrawSidebar();
 }
 
+static void activate_seconds() {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Activating seconds");
+  tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+
+  secondsCountdown = 30;
+
+  // Draw small numbers
+  update_clock();
+
+  // Hide big numbers
+  for(int i = 0; i < 4; i++) {
+    ClockDigit_setBlank(&clockDigits[i]);
+  }
+}
+
+static void deactivate_seconds() {
+  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+  // Draw big numbers
+  update_clock();
+
+  // Hide small numbers
+  for(int i = 0; i < 6; i++) {
+    ClockDigit_setBlank(&smallClockDigits[i]);
+  }
+}
+
+static void tap_handler(AccelAxisType axis, int32_t direction) {
+  activate_seconds();
+}
 
 static void init() {
   setlocale(LC_ALL, "");
@@ -537,6 +618,9 @@ static void init() {
 
   // Register with TickTimerService
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+  
+  // Register with AccelerometerService to temporarily show seconds
+  accel_tap_service_subscribe(tap_handler);
 
   bool connected = bluetooth_connection_service_peek();
   bluetoothStateChanged(connected);
